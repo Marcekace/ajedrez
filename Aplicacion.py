@@ -17,6 +17,7 @@ from platform import system
 from tkinter import messagebox, ttk
 import tkinter.font as tkf
 import Entidad as e
+from random import randrange
 
 
 class LabelAjedrez(tk.Label) :
@@ -95,19 +96,32 @@ class App(tk.Tk) :
                 for j in range(8) :
                     self.__celdas[i][j].unbind("<Button-1>")
             messagebox.showinfo(message="Has perdido!")
-            return False
-        elif maquina.getRey() not in maquina.getPiezas() :
+        if maquina.getRey() not in maquina.getPiezas() :
             for i in range(8) :
                 for j in range(8) :
                     self.__celdas[i][j].unbind("<Button-1>")
             messagebox.showinfo(message="Has ganado!")
-            return False
-        else :
-            return True
 
 
     def coronar(self) :
-        pass
+        if self.__coronar_opciones.get() == "♛" :
+            pieza = e.Reina("negro")
+        elif self.__coronar_opciones.get() == "♜" :
+            pieza = e.Torre("negro")
+        elif self.__coronar_opciones.get() == "♝" :
+            pieza = e.Alfil("negro")
+        else :
+            pieza = e.Caballo("negro")
+        self.__jugador.getPiezas().remove(self.__tablero[self.__jugador.getEleccion()[0]][self.__jugador.getEleccion()[1]])
+        self.__jugador.getPiezas().append(pieza)
+        pieza.setPos((self.__jugador.getEleccion()[0], self.__jugador.getEleccion()[1]))
+        self.__tablero[self.__jugador.getEleccion()[0]][self.__jugador.getEleccion()[1]] = pieza
+        self.after(200, self.actualizar_tablero)
+        for i in range(8) :
+            for j in range(8) :
+                self.__celdas[i][j].bind("<Button-1>", self.mover_pieza)
+        self.__coronar_boton.destroy()
+        self.__coronar_opciones.destroy()
 
 
     def mover_pieza(self, event=None) :
@@ -123,24 +137,36 @@ class App(tk.Tk) :
                     movimientos = self.__tablero[self.__jugador.getEleccion()[0][0]][self.__jugador.getEleccion()[0][1]].comprobarTablero(self.__tablero)
                     if pos in movimientos :
                         # Mueve la pieza si el movimiento es valido
-                        if self.verificar_partida(self.__jugador, self.__maquina) :
-                            self.__celdas[self.__jugador.getEleccion()[0][0]][self.__jugador.getEleccion()[0][1]].config(background=self.__jugador.getEleccion()[1])
-                            if isinstance(self.__tablero[pos[0]][pos[1]], e.Peon) :
-                                self.__tablero[pos[0]][pos[1]].setM(False)
-                            if hasattr(self.__tablero[pos[0]][pos[1]], "color") :
-                                if self.__tablero[pos[0]][pos[1]].getColor() == "blanco" :
-                                    self.__jugador.getPiezasCapturadas().append(self.__tablero[pos[0]][pos[1]])
-                                    self.__maquina.getPiezas().remove(self.__tablero[pos[0]][pos[1]])
-                                    label = tk.Label(master=self.__capturadas_negro, text=self.__jugador.getPiezasCapturadas()[-1], font=self.__font)
-                                    if len(self.__jugador.getPiezasCapturadas()) <= 8 :
-                                        label.grid(row=1, column=len(self.__jugador.getPiezasCapturadas()))
-                                    else :
-                                        label.grid(row=2, column=len(self.__jugador.getPiezasCapturadas()) - 8)
-                            self.__tablero[pos[0]][pos[1]] = self.__tablero[self.__jugador.getEleccion()[0][0]][self.__jugador.getEleccion()[0][1]]
-                            self.__tablero[pos[0]][pos[1]].setPos(pos)
-                            self.__tablero[self.__jugador.getEleccion()[0][0]][self.__jugador.getEleccion()[0][1]] = None
+                        self.__celdas[self.__jugador.getEleccion()[0][0]][self.__jugador.getEleccion()[0][1]].config(background=self.__jugador.getEleccion()[1])
+                        if hasattr(self.__tablero[pos[0]][pos[1]], "color") :
+                            if self.__tablero[pos[0]][pos[1]].getColor() == "blanco" :
+                                self.__jugador.getPiezasCapturadas().append(self.__tablero[pos[0]][pos[1]])
+                                self.__maquina.getPiezas().remove(self.__tablero[pos[0]][pos[1]])
+                                label = tk.Label(master=self.__capturadas_negro, text=self.__jugador.getPiezasCapturadas()[-1], font=self.__font)
+                                if len(self.__jugador.getPiezasCapturadas()) <= 8 :
+                                    label.grid(row=1, column=len(self.__jugador.getPiezasCapturadas()))
+                                else :
+                                    label.grid(row=2, column=len(self.__jugador.getPiezasCapturadas()) - 8)
+                        self.__tablero[pos[0]][pos[1]] = self.__tablero[self.__jugador.getEleccion()[0][0]][self.__jugador.getEleccion()[0][1]]
+                        self.__tablero[pos[0]][pos[1]].setPos(pos)
+                        self.__tablero[self.__jugador.getEleccion()[0][0]][self.__jugador.getEleccion()[0][1]] = None
 
-                            self.after(500, self.actualizar_tablero)
+                        self.after(500, self.actualizar_tablero)
+                        if isinstance(self.__tablero[pos[0]][pos[1]], e.Peon) :
+                            self.__tablero[pos[0]][pos[1]].setM(False)
+                            if self.__tablero[pos[0]][pos[1]].getPos()[0] == 0 :
+                                self.__coronar_opciones = ttk.Combobox(values=("♛", "♜", "♝", "♞"), font=self.__font)
+                                self.__coronar_opciones.place(x=100, y=390, width=50, height=40)
+                                self.__coronar_boton = ttk.Button(text="Coronar", command=self.coronar)
+                                self.__coronar_boton.place(x=200, y=390, height=40)
+                                for i in range(8) :
+                                    for j in range(8) :
+                                        self.__celdas[i][j].unbind("<Button-1>")
+                                self.__jugador.setEleccion(pos)
+                                self.__status = False
+                        self.after(100, self.verificar_partida(self.__jugador, self.__maquina))
+
+                        if self.__status :
                             self.mover_maquina()
                     else :
                         # Sentencias para deseleccionar
@@ -148,26 +174,35 @@ class App(tk.Tk) :
                     self.__status = False
             self.after(500, self.actualizar_tablero)
 
-    def mover_maquina(self) :
-        if self.verificar_partida(self.__jugador, self.__maquina) :
-            # Movimiento de la maquina
-            jugada = self.__maquina.movimiento(self.__jugador, self.__tablero)
-            if isinstance(self.__tablero[jugada[0][0]][jugada[0][1]], e.Peon) :
-                self.__tablero[jugada[0][0]][jugada[0][1]].setM(False)
-            if hasattr(self.__tablero[jugada[1][0]][jugada[1][1]], "color") :
-                if self.__tablero[jugada[1][0]][jugada[1][1]].getColor() == "negro" :
-                    self.__maquina.getPiezasCapturadas().append(self.__tablero[jugada[1][0]][jugada[1][1]])
-                    self.__jugador.getPiezas().remove(self.__tablero[jugada[1][0]][jugada[1][1]])
-                    label = tk.Label(master=self.__capturadas_blanco, text=self.__maquina.getPiezasCapturadas()[-1], font=self.__font)
-                    if len(self.__maquina.getPiezasCapturadas()) <= 8 :
-                        label.grid(row=1, column=len(self.__maquina.getPiezasCapturadas()))
-                    else :
-                        label.grid(row=2, column=len(self.__maquina.getPiezasCapturadas()) - 8)
-            self.__tablero[jugada[1][0]][jugada[1][1]] = self.__tablero[jugada[0][0]][jugada[0][1]]
-            self.__tablero[jugada[1][0]][jugada[1][1]].setPos((jugada[1][0], jugada[1][1]))
-            self.__tablero[jugada[0][0]][jugada[0][1]] = None
 
-            self.after(500, self.actualizar_tablero)
+    def mover_maquina(self) :
+        # Movimiento de la maquina
+        jugada = self.__maquina.movimiento(self.__jugador, self.__tablero)
+        if hasattr(self.__tablero[jugada[1][0]][jugada[1][1]], "color") :
+            if self.__tablero[jugada[1][0]][jugada[1][1]].getColor() == "negro" :
+                self.__maquina.getPiezasCapturadas().append(self.__tablero[jugada[1][0]][jugada[1][1]])
+                self.__jugador.getPiezas().remove(self.__tablero[jugada[1][0]][jugada[1][1]])
+                label = tk.Label(master=self.__capturadas_blanco, text=self.__maquina.getPiezasCapturadas()[-1], font=self.__font)
+                if len(self.__maquina.getPiezasCapturadas()) <= 8 :
+                    label.grid(row=1, column=len(self.__maquina.getPiezasCapturadas()))
+                else :
+                    label.grid(row=2, column=len(self.__maquina.getPiezasCapturadas()) - 8)
+        self.__tablero[jugada[1][0]][jugada[1][1]] = self.__tablero[jugada[0][0]][jugada[0][1]]
+        self.__tablero[jugada[1][0]][jugada[1][1]].setPos((jugada[1][0], jugada[1][1]))
+        self.__tablero[jugada[0][0]][jugada[0][1]] = None
+
+        if isinstance(self.__tablero[jugada[1][0]][jugada[1][1]], e.Peon) :
+            self.__tablero[jugada[1][0]][jugada[1][1]].setM(False)
+            if self.__tablero[jugada[1][0]][jugada[1][1]].getPos()[0] == 7 :
+                piezas = [e.Torre("blanco"), e.Alfil("blanco"), e.Caballo("blanco"), e.Reina("blanco")]
+                pieza = piezas[randrange(0, len(piezas))]
+                self.__maquina.getPiezas().remove(self.__tablero[jugada[1][0]][jugada[1][1]])
+                self.__maquina.getPiezas().append(pieza)
+                self.__tablero[jugada[1][0]][jugada[1][1]] = pieza
+                pieza.setPos((jugada[1][0], jugada[1][1]))
+
+        self.after(100, self.verificar_partida(self.__jugador, self.__maquina))
+        self.after(500, self.actualizar_tablero)
 
 
     def actualizar_tablero(self, event=None) :

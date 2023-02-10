@@ -8,3 +8,4 @@ En la ultima version aplique POO.
 Cuenta con dos versiones
 v.02 de consola para uno y dos jugadores
 v.03 de escritorio para un jugador (por el momento solo se puede jugar ingresando los movimientos via texto) 
+v.04 de escritorio para un jugador se puede jugar usando el raton

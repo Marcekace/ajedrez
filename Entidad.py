@@ -585,12 +585,15 @@ class Maquina(Jugador) :
                 return (self.getRey().getPos(), self.getRey().comprobarTablero(tablero)[randrange(0, len(self.getRey().comprobarTablero(tablero)))])
 
         if self.__switch :
-            while True :
-                pieza = self.getPiezas()[randrange(0, len(self.getPiezas()))]
-                movimientos = pieza.comprobarTablero(tablero)
-                if movimientos != [] :
-                    self.__switch = False
-                    return (pieza.getPos(), movimientos[randrange(0, len(movimientos))])
+            try :
+                while True :
+                    pieza = self.getPiezas()[randrange(0, len(self.getPiezas()))]
+                    movimientos = pieza.comprobarTablero(tablero)
+                    if movimientos != [] :
+                        self.__switch = False
+                        return (pieza.getPos(), movimientos[randrange(0, len(movimientos))])
+            except ValueError :
+                pass
 
         else :
             npieza = 0
