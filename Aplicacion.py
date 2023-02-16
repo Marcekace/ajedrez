@@ -95,11 +95,13 @@ class App(tk.Tk) :
             for i in range(8) :
                 for j in range(8) :
                     self.__celdas[i][j].unbind("<Button-1>")
+            self.__status = False
             messagebox.showinfo(message="Has perdido!")
         if maquina.getRey() not in maquina.getPiezas() :
             for i in range(8) :
                 for j in range(8) :
                     self.__celdas[i][j].unbind("<Button-1>")
+            self.__status = False
             messagebox.showinfo(message="Has ganado!")
 
 
